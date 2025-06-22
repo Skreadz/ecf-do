@@ -1,0 +1,9 @@
+---
+- name: Ajouter le dépôt Kubernetes pour RHEL/CentOS
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes Repository
+    baseurl: https://pkgs.k8s.io/core:/stable:/v{{ k8s_version | regex_replace('^(\d+\.\d+).*', '\1') }}/rpm/
+    gpgcheck: true
+    gpgkey: https://pkgs.k8s.io/core:/stable:/v{{ k8s_version | regex_replace('^(\d+\.\d+).*', '\1') }}/rpm/repodata/repomd.xml.key
+    enabled: true

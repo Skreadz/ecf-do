@@ -1,0 +1,56 @@
+---
+- name: Créer le répertoire pour les clés GPG
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Télécharger la clé GPG de Kubernetes
+  ansible.builtin.get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v{{ k8s_version | regex_replace('^(\d+\.\d+).*', '\1') }}/deb/Release.key
+    dest: /tmp/k8s-release.key
+    mode: '0644'
+
+- name: Déarmorer la clé GPG de Kubernetes
+  ansible.builtin.shell: set -o pipefail && cat /tmp/k8s-release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    executable: /bin/bash
+
+- name: Ajouter le dépôt Kubernetes pour Debian
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    content: |
+      deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version | regex_replace('^(\d+\.\d+).*', '\1') }}/deb/ /
+    mode: '0644'
+
+- name: Créer le répertoire pour les clés GPG Docker
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Télécharger la clé GPG de Docker
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /tmp/docker.gpg
+    mode: '0644'
+  become: true
+
+- name: Ajouter la clé GPG de Docker aux dépôts
+  ansible.builtin.shell: |
+    cat /tmp/docker.gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+  become: true
+
+- name: Déterminer la distribution Linux
+  ansible.builtin.command: lsb_release -cs
+  register: lsb_release
+  changed_when: false
+
+- name: Ajouter le dépôt Docker pour Debian
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ lsb_release.stdout }} stable"
+    state: present
+  become: true

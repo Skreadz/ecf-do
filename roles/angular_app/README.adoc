@@ -1,0 +1,109 @@
+:doctype: book
+:toc-title: Table des matières
+:toc:
+:sectnums:
+:toclevels: 3
+:sectnumlevels: 4
+:last-update-label: Dernière mise à jour
+:imagesdir: ./images
+:classification: Interne
+:author: Dylan Ortega
+:client: Formation DevOps
+:projet: Déploiement Angular Kubernetes
+:revnumber: 1.0
+:revdate: 2024-06-09
+
+= Rôle Ansible `angular_app`
+
+== Présentation
+
+Ce rôle Ansible permet de déployer une application Angular packagée en conteneur sur un cluster Kubernetes. Il gère la génération du manifest, la création du namespace, le déploiement et la vérification de l’accessibilité du service.
+
+== Prérequis
+
+* Cluster Kubernetes opérationnel
+* Accès à `kubectl` et au fichier kubeconfig pour l’utilisateur `dortega`
+* Image Docker Angular disponible dans un registre accessible
+* Modules Ansible requis : `community.kubernetes`, `kubernetes.core`
+
+== Variables du rôle
+
+[cols="1,1,2",options="header"]
+|===
+|Nom
+|Valeur par défaut
+|Description
+
+|`app_name`
+|`angular-app`
+|Nom de l’application et du déploiement
+
+|`image`
+|`skreadz/front-app:latest`
+|Image Docker Angular à déployer (spécifier une version exacte en production)
+
+|`container_port`
+|`80`
+|Port exposé par le conteneur Angular
+
+|`node_port`
+|`30081`
+|Port NodePort Kubernetes pour accéder à l’application
+
+|`replicas`
+|`1`
+|Nombre de pods Angular à déployer
+
+|`output_angular_yaml`
+|`/tmp/angular-app.yaml`
+|Chemin du manifest généré
+
+|`angular_app_namespace`
+|`angular`
+|Namespace Kubernetes cible
+
+|`node_ip`
+|`10.237.70.21`
+|Adresse IP du nœud pour la vérification HTTP
+|===
+
+== Dépendances
+
+Aucune dépendance externe obligatoire. S’assurer que les collections Ansible nécessaires sont installées.
+
+== Exemple d’utilisation
+
+[source,yaml]
+----
+- hosts: all
+  become: true
+  roles:
+    - role: angular_app
+      vars:
+        image: "skreadz/front-app:1.0.0"
+        node_port: 31000
+        angular_app_namespace: "frontend"
+----
+
+== Tâches principales
+
+. Génération du manifest Kubernetes via template Jinja2
+. Création du namespace si absent
+. Application du manifest de façon idempotente
+. Vérification de l’accessibilité HTTP du service Angular
+
+== Bonnes pratiques
+
+* Toujours spécifier une version exacte d’image Docker (`image`)
+* Adapter le `node_port` pour éviter les conflits
+* Utiliser un namespace dédié par application
+
+== Historique des versions
+
+[cols="1,2,2",options="header"]
+|===
+|Version |Date |Commentaires
+|1.0 |2024-06-09 |Version initiale
+|===
+
+Dernière mise à jour : {revdate}

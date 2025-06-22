@@ -1,0 +1,7 @@
+---
+- name: Déployer l'application Spring sur Kubernetes
+  hosts: master
+  become: true
+  gather_facts: true
+  roles:
+    - role: spring_app

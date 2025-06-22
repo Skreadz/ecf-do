@@ -1,0 +1,110 @@
+:doctype: book
+:toc-title: Table des matières
+:toc:
+:sectnums:
+:toclevels: 3
+:sectnumlevels: 4
+:last-update-label: Dernière mise à jour
+:imagesdir: ./images
+:classification: Interne
+:author: Dylan Ortega
+:client: Formation DevOps
+:projet: Déploiement Kubernetes Master
+:revnumber: 1.0
+:revdate: 2024-06-09
+
+= Rôle Ansible `kube_master`
+
+== Présentation
+
+Ce rôle Ansible prépare et initialise un nœud maître Kubernetes. Il gère le chargement des modules kernel, l’initialisation du cluster, la configuration de l’utilisateur `dortega`, le déploiement du CNI (Calico) et la génération du fichier de configuration kubeconfig.
+
+== Prérequis
+
+* Système Linux compatible (Debian/Ubuntu ou RHEL/CentOS)
+* Accès root ou sudo pour l’utilisateur `dortega`
+* Accès réseau pour télécharger les images et manifests nécessaires
+* Modules Ansible requis : `ansible.builtin`, `kubernetes.core`
+
+== Variables du rôle
+
+[cols="1,1,2",options="header"]
+|===
+|Nom
+|Valeur par défaut
+|Description
+
+|`k8s_version`
+|`1.33`
+|Version de Kubernetes à installer
+
+|`pod_network_cidr`
+|`192.168.0.0/16`
+|CIDR du réseau de pods (pour le CNI)
+
+|`os_family`
+|Détecté automatiquement
+|Famille du système d’exploitation (debian, redhat, etc.)
+
+|`kube_config_dir`
+|`/home/dortega/.kube`
+|Répertoire de configuration kubeconfig pour l’utilisateur
+
+|`cni_plugin`
+|`calico`
+|Plugin CNI à déployer (par défaut : Calico)
+
+|`cni_version`
+|`3.26.1`
+|Version du plugin CNI
+
+|`disable_swap`
+|`true`
+|Désactive le swap sur le nœud
+
+|`enable_modules`
+|`[br_netfilter, overlay]`
+|Modules kernel à charger pour Kubernetes
+|===
+
+== Dépendances
+
+Aucune dépendance externe obligatoire. S’assurer que les collections Ansible nécessaires sont installées.
+
+== Exemple d’utilisation
+
+[source,yaml]
+----
+- hosts: master
+  become: true
+  roles:
+    - role: kube_master
+      vars:
+        pod_network_cidr: "10.244.0.0/16"
+        cni_plugin: "calico"
+        cni_version: "3.30.0"
+----
+
+== Tâches principales
+
+. Chargement et persistance des modules kernel requis
+. Initialisation du cluster Kubernetes avec kubeadm
+. Création et configuration du répertoire kubeconfig pour l’utilisateur `dortega`
+. Téléchargement et application du manifest Calico (si CNI = calico)
+. (Optionnel) Génération de la commande `kubeadm join` pour les workers
+
+== Bonnes pratiques
+
+* Toujours spécifier une version exacte pour Kubernetes et le CNI
+* Utiliser un utilisateur dédié (`dortega`) pour la gestion du cluster
+* Sécuriser le fichier kubeconfig (`0600`)
+
+== Historique des versions
+
+[cols="1,2,2",options="header"]
+|===
+|Version |Date |Commentaires
+|1.0 |2024-06-09 |Version initiale
+|===
+
+Dernière mise à jour : {revdate}

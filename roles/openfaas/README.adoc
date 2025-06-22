@@ -1,0 +1,93 @@
+:doctype: book
+:toc-title: Table des matières
+:toc:
+:sectnums:
+:toclevels: 3
+:sectnumlevels: 4
+:last-update-label: Dernière mise à jour
+:imagesdir: ./images
+:classification: Interne
+:author: Dylan Ortega
+:client: Formation DevOps
+:projet: Déploiement OpenFaaS Kubernetes
+:revnumber: 1.0
+:revdate: 2024-06-09
+
+= Rôle Ansible `openfaas`
+
+== Présentation
+
+Ce rôle Ansible automatise l’installation d’OpenFaaS sur un cluster Kubernetes via Helm. Il gère l’installation de Helm, la configuration des dépôts, la création des namespaces, la gestion du secret d’authentification et le déploiement du chart Helm OpenFaaS.
+
+== Prérequis
+
+* Cluster Kubernetes opérationnel
+* Accès à `kubectl` et au fichier kubeconfig pour l’utilisateur `dortega`
+* Accès root ou sudo pour l’utilisateur `dortega`
+* Modules Ansible requis : `ansible.builtin`, `kubernetes.core`
+* Accès Internet pour télécharger Helm et les charts
+
+== Variables du rôle
+
+[cols="1,1,2",options="header"]
+|===
+|Nom
+|Valeur par défaut
+|Description
+
+|`openfaas_user`
+|`admin`
+|Nom d’utilisateur pour l’authentification OpenFaaS
+
+|`openfaas_password`
+|`admin`
+|Mot de passe pour l’authentification OpenFaaS
+
+|`helm_version`
+|`v3.14.0`
+|Version exacte de Helm à installer
+|===
+
+== Dépendances
+
+Aucune dépendance externe obligatoire. S’assurer que les collections Ansible nécessaires sont installées.
+
+== Exemple d’utilisation
+
+[source,yaml]
+----
+- hosts: all
+  become: true
+  roles:
+    - role: openfaas
+      vars:
+        openfaas_user: "admin"
+        openfaas_password: "motdepassefort"
+        helm_version: "v3.14.0"
+----
+
+== Tâches principales
+
+. Installation de Helm (version exacte)
+. Ajout et mise à jour du dépôt Helm OpenFaaS
+. Installation des dépendances Python pour Kubernetes
+. Création des namespaces `openfaas` et `openfaas-fn`
+. Création du secret `basic-auth` pour l’authentification
+. Déploiement d’OpenFaaS via Helm
+. Affichage des instructions d’accès à l’interface web
+
+== Bonnes pratiques
+
+* Toujours spécifier une version exacte pour Helm (`helm_version`)
+* Utiliser des identifiants forts pour `openfaas_user` et `openfaas_password`
+* Sécuriser l’accès à l’interface web OpenFaaS
+
+== Historique des versions
+
+[cols="1,2,2",options="header"]
+|===
+|Version |Date |Commentaires
+|1.0 |2024-06-09 |Version initiale
+|===
+
+Dernière mise à jour : {revdate}

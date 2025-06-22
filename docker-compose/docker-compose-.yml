@@ -1,0 +1,36 @@
+version: '3.8' # Version du format de fichier Compose utilisée
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.1 # Image Elasticsearch version précise
+    container_name: elasticsearch # Nom du conteneur pour faciliter la gestion
+    environment:
+      - discovery.type=single-node # Mode single-node pour usage développement/test
+      - xpack.security.enabled=false # Désactive la sécurité X-Pack (non recommandé en production)
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g # Paramètres mémoire JVM pour Elasticsearch
+    ports:
+      - "9200:9200" # Port HTTP Elasticsearch exposé
+      - "9300:9300" # Port transport Elasticsearch exposé
+    networks:
+      - elk # Rattachement au réseau personnalisé 'elk'
+    volumes:
+      - esdata:/usr/share/elasticsearch/data # Volume persistant pour les données
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.1 # Image Kibana version précise
+    container_name: kibana # Nom du conteneur Kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Adresse du service Elasticsearch
+    ports:
+      - "5601:5601" # Port d'accès à l'interface Kibana
+    depends_on:
+      - elasticsearch # Démarre après Elasticsearch
+    networks:
+      - elk # Rattachement au réseau personnalisé 'elk'
+
+volumes:
+  esdata: # Volume Docker nommé pour persister les données Elasticsearch
+
+networks:
+  elk:
+    driver: bridge # Réseau Docker de type bridge pour l'isolation des services

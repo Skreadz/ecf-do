@@ -1,0 +1,11 @@
+# Étape 1 : image de base
+FROM openjdk:17-jdk-slim
+
+# Étape 2 : copie du fichier .jar dans le conteneur
+COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
+
+# Étape 3 : port exposé
+EXPOSE 8080
+
+# Étape 4 : commande d'exécution
+ENTRYPOINT ["java", "-jar", "app.jar"]

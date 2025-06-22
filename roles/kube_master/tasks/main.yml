@@ -1,0 +1,100 @@
+---
+# Tâches pour préparer le système avant d'initialiser le cluster Kubernetes
+# - name: Créer le répertoire de configuration containerd
+#   ansible.builtin.file:
+#     path: /etc/containerd
+#     state: directory
+#     mode: '0755'
+
+# - name: Générer la configuration par défaut de containerd
+#   ansible.builtin.shell: |
+#     containerd config default > /etc/containerd/config.toml
+#   args:
+#     creates: /etc/containerd/config.toml
+
+# - name: Configurer le plugin CRI de containerd pour utiliser systemd cgroup driver
+#   ansible.builtin.replace:
+#     path: /etc/containerd/config.toml
+#     regexp: 'SystemdCgroup = false'
+#     replace: 'SystemdCgroup = true'
+
+# - name: Redémarrer et activer containerd
+#   ansible.builtin.systemd:
+#     name: containerd
+#     state: restarted
+#     enabled: yes
+
+- name: Charger les modules kernel nécessaires pour le CNI
+  ansible.builtin.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - br_netfilter
+    - overlay
+
+- name: S'assurer que les modules sont persistants au redémarrage
+  ansible.builtin.lineinfile:
+    path: /etc/modules-load.d/k8s.conf
+    line: "{{ item }}"
+    create: true
+  loop:
+    - br_netfilter
+    - overlay
+
+- name: Initialiser le cluster Kubernetes
+  ansible.builtin.command: >
+    kubeadm init
+    --pod-network-cidr={{ pod_network_cidr }} --cri-socket=unix:///var/run/cri-dockerd.sock
+  args:
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init
+
+- name: Créer le répertoire .kube pour dortega
+  ansible.builtin.file:
+    path: "{{ kube_config_dir }}"
+    state: directory
+    owner: dortega
+    group: dortega
+    mode: '0755'
+
+- name: Copier le fichier de configuration admin
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ kube_config_dir }}/config"
+    remote_src: true
+    owner: dortega
+    group: dortega
+    mode: '0600'
+
+- name: Télécharger le manifeste Calico
+  when: cni_plugin == "calico"
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/projectcalico/calico/v3.30.0/manifests/calico.yaml"
+    dest: "{{ kube_config_dir }}/calico.yaml"
+    mode: '0644'
+    owner: dortega
+    group: dortega
+
+- name: Appliquer le manifeste Calico avec kubectl
+  when: cni_plugin == "calico"
+  become: true
+  ansible.builtin.command: >
+    kubectl --kubeconfig={{ kube_config_dir }}/config apply -f {{ kube_config_dir }}/calico.yaml
+  register: calico_apply
+  changed_when: calico_apply.rc == 0
+  failed_when: calico_apply.rc != 0
+  tags: cni
+
+# - name: Vérifier si une commande join existe déjà
+#   ansible.builtin.command: kubeadm token list
+#   register: kubeadm_token_list
+#   changed_when: false
+
+# - name: Générer la commande join si aucun token valide n’existe
+#   ansible.builtin.command: kubeadm token create --print-join-command
+#   register: join_command
+#   when: "'The output is empty' in kubeadm_token_list.stdout or kubeadm_token_list.stdout_lines | length == 0"
+
+# - name: Sauvegarder la commande join
+#   ansible.builtin.set_fact:
+#     join_command: "{{ join_command.stdout }}"

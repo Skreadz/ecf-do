@@ -1,0 +1,20 @@
+---
+# Variables générales
+k8s_version: "1.33"
+pod_network_cidr: "192.168.0.0/16"
+
+# Variables spécifiques au système d'exploitation
+os_family: "{{ ansible_facts['os_family'] | lower }}"
+
+# Path du fichier de configuration kubectl
+kube_config_dir: "/home/dortega/.kube"
+
+# CNI (Container Network Interface) à utiliser
+cni_plugin: "calico"
+cni_version: "3.26.1"
+
+# Options pour désactiver swap et configurer modules
+disable_swap: true
+enable_modules:
+  - br_netfilter
+  - overlay

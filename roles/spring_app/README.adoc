@@ -1,0 +1,104 @@
+:doctype: book
+:toc-title: Table des matières
+:toc:
+:sectnums:
+:toclevels: 3
+:sectnumlevels: 4
+:last-update-label: Dernière mise à jour
+:imagesdir: ./images
+:classification: Interne
+:author: Dylan Ortega
+:client: Formation DevOps
+:projet: Déploiement Spring Boot Kubernetes
+:revnumber: 1.0
+:revdate: 2024-06-09
+
+= Rôle Ansible `spring_app`
+
+== Présentation
+
+Ce rôle Ansible permet de déployer une application Spring Boot packagée en conteneur sur un cluster Kubernetes. Il gère la génération du manifest, la création du namespace, le déploiement et l’exposition du service via NodePort.
+
+== Prérequis
+
+* Cluster Kubernetes opérationnel
+* Accès à `kubectl` et au fichier kubeconfig pour l’utilisateur `dortega`
+* Image Docker Spring Boot disponible dans un registre accessible
+* Modules Ansible requis : `community.kubernetes`, `kubernetes.core`
+
+== Variables du rôle
+
+[cols="1,1,2",options="header"]
+|===
+|Nom
+|Valeur par défaut
+|Description
+
+|`app_name`
+|`spring-app`
+|Nom de l’application et du déploiement
+
+|`image`
+|`skreadz/formation_dortega:latest`
+|Image Docker Spring Boot à déployer (spécifier une version exacte en production)
+
+|`container_port`
+|`8080`
+|Port exposé par le conteneur Spring Boot
+
+|`node_port`
+|`30080`
+|Port NodePort Kubernetes pour accéder à l’application
+
+|`replicas`
+|`1`
+|Nombre de pods Spring Boot à déployer
+
+|`output_yaml`
+|`/tmp/spring-app.yaml`
+|Chemin du manifest généré
+
+|`spring_app_namespace`
+|`springboot`
+|Namespace Kubernetes cible
+|===
+
+== Dépendances
+
+Aucune dépendance externe obligatoire. S’assurer que les collections Ansible nécessaires sont installées.
+
+== Exemple d’utilisation
+
+[source,yaml]
+----
+- hosts: all
+  become: true
+  roles:
+    - role: spring_app
+      vars:
+        image: "skreadz/formation_dortega:1.0.0"
+        node_port: 31080
+        spring_app_namespace: "backend"
+----
+
+== Tâches principales
+
+. Génération du manifest Kubernetes via template Jinja2
+. Création du namespace si absent
+. Application du manifest de façon idempotente
+
+== Bonnes pratiques
+
+* Toujours spécifier une version exacte d’image Docker (`image`)
+* Adapter le `node_port` pour éviter les conflits
+* Utiliser un namespace dédié par application
+
+== Historique des versions
+
+[cols="1,2,2",options="header"]
+|===
+|Version |Date |Commentaires
+|1.0 |2024-06-09 |Version initiale
+|===
+
+Dernière mise à jour : {revdate}

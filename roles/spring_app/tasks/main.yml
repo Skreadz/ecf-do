@@ -1,0 +1,27 @@
+---
+# tasks file for spring_app
+- name: Générer le manifest Kubernetes via template
+  ansible.builtin.template:
+    src: templates/spring-app.yaml.j2
+    dest: "{{ output_yaml }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Créer les namespaces Spring App
+  kubernetes.core.k8s:
+    kubeconfig: /home/dortega/.kube/config
+    api_version: v1
+    kind: Namespace
+    name: "{{ spring_app_namespace }}"
+    state: present
+
+- name: Appliquer le manifest sur Kubernetes de façon idempotente
+  community.kubernetes.k8s:
+    kubeconfig: /home/dortega/.kube/config
+    state: present
+    src: "{{ output_yaml }}"
+    namespace: "{{ spring_app_namespace }}"
+    apply: true
+    force: false
+    validate_certs: true

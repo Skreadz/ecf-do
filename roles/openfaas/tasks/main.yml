@@ -1,0 +1,73 @@
+---
+- name: Installer Helm
+  ansible.builtin.shell: |
+    curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  args:
+    creates: /usr/local/bin/helm
+
+- name: Ajouter le repo Helm OpenFaaS
+  ansible.builtin.shell: helm repo add openfaas https://openfaas.github.io/faas-netes/
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+- name: Mettre à jour les repos Helm
+  ansible.builtin.shell: helm repo update
+
+- name: Installer python3-pip si nécessaire
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+    update_cache: true
+
+- name: Installer la bibliothèque Python kubernetes pour le module k8s (méthode Debian)
+  ansible.builtin.apt:
+    name: python3-kubernetes
+    state: present
+    update_cache: true
+
+- name: Créer les namespaces OpenFaaS
+  kubernetes.core.k8s:
+    kubeconfig: /home/dortega/.kube/config
+    api_version: v1
+    kind: Namespace
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openfaas
+    - openfaas-fn
+
+- name: Créer le secret basic-auth
+  kubernetes.core.k8s:
+    kubeconfig: /home/dortega/.kube/config
+    state: present
+    namespace: openfaas
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: basic-auth
+      type: Opaque
+      data:
+        basic-auth-user: "{{ openfaas_user | b64encode }}"
+        basic-auth-password: "{{ openfaas_password | b64encode }}"
+
+- name: Déployer OpenFaaS via Helm
+  kubernetes.core.helm:
+    kubeconfig: /home/dortega/.kube/config
+    name: openfaas
+    chart_repo_url: https://openfaas.github.io/faas-netes/
+    chart_ref: openfaas
+    release_namespace: openfaas
+    create_namespace: false
+    values:
+      basic_auth: true
+      gateway:
+        directFunctions: true
+        upstreamTimeout: 120s
+      faasnetes:
+        imagePullPolicy: Always
+
+- name: Afficher instructions d’accès
+  ansible.builtin.debug:
+    msg: >
+      OpenFaaS installé. Lancez 'kubectl port-forward -n openfaas svc/gateway 8080:8080' pour accéder à l’interface web.

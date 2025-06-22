@@ -1,0 +1,92 @@
+:doctype: article
+:toc-title: Table des matières
+:toc: left
+:sectnums:
+:toclevels: 3
+:sectnumlevels: 5
+:last-update-label: Dernière mise à jour
+:imagesdir: images
+:classification: INTERNE
+:author: Dylan Ortega
+:client: Formation Cloud
+:projet: Déploiement Kubernetes
+:revnumber: 1.0
+:revdate: 2023-05-26
+
+= Déploiement Kubernetes Simplifié
+
+== Présentation des rôles
+
+[cols="1,3",options="header"]
+|===
+|Rôle |Description
+
+|`angular_app`
+|Déploie automatiquement une application Angular conteneurisée sur Kubernetes, génère le manifest, crée le namespace, expose le service via NodePort et vérifie l’accessibilité HTTP.
+
+|`spring_app`
+|Déploie une application Spring Boot packagée en conteneur sur Kubernetes, gère la génération du manifest, la création du namespace et l’exposition du service via NodePort.
+
+|`openfaas`
+|Automatise l’installation d’OpenFaaS sur Kubernetes via Helm, configure les namespaces, secrets d’authentification et déploie la stack serverless.
+|===
+
+== Introduction
+Ce projet Ansible permet de déployer rapidement un cluster Kubernetes à des fins de test.
+
+== Prérequis
+* Ansible >= 2.12.0
+* Machines cibles avec Debian, Ubuntu ou RHEL/CentOS
+* Connexion SSH avec l'utilisateur `dortega` et droits sudo
+
+== Structure du projet
+[source]
+----
+k8s-simple
+├── ansible.cfg
+├── inventory
+│   └── hosts.ini
+├── playbook.yml
+├── group_vars
+│   └── all.yml
+├── vars
+│   ├── debian.yml
+│   └── redhat.yml
+└── README.adoc
+----
+
+== Utilisation
+
+=== Configuration de l'inventaire
+Modifier le fichier `inventory/hosts.ini` pour refléter vos machines cibles.
+
+=== Personnalisation
+Ajuster les variables dans `group_vars/all.yml` selon vos besoins.
+
+=== Exécution
+[source,bash]
+----
+ansible-playbook -i inventory/hosts.ini playbook.yml
+----
+
+== Variables
+[cols="1,3,1"]
+|===
+|Variable |Description |Défaut
+
+|k8s_version
+|Version de Kubernetes à installer
+|1.28.6
+
+|pod_network_cidr
+|CIDR pour le réseau des pods
+|10.244.0.0/16
+
+|cni_plugin
+|Plugin CNI à utiliser
+|calico
+
+|cni_version
+|Version du plugin CNI
+|3.26.1
+|===

@@ -1,0 +1,21 @@
+---
+- name: Préparer le cluster Kubernetes
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - role: kube_prerequis
+
+- name: Exécuter les tâches master du rôle kubernetes_master
+  hosts: k8s-master
+  become: true
+  gather_facts: true
+  roles:
+    - role: kube_master
+
+# - name: Exécuter les tâches worker du rôle kubernetes_master
+#   hosts: k8s-worker1
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: kube_worker

@@ -1,0 +1,87 @@
+- name: Inclure les variables spécifiques au système d'exploitation
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ os_family }}.yml"
+    - "vars/default.yml"
+
+- name: Désactiver le swap
+  when: disable_swap | bool
+  block:
+    - name: Désactiver le swap immédiatement
+      ansible.builtin.command: swapoff -a
+      changed_when: false
+
+    - name: Désactiver le swap dans fstab
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^([^#].* swap .*)$'
+        replace: '# \1'
+
+- name: Configurer les modules requis
+  ansible.builtin.template:
+    src: templates/k8s_modules.conf.j2
+    dest: /etc/modules-load.d/k8s.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Installer les dépendances Docker et Kubernetes
+  ansible.builtin.package:
+    name: "{{ os_packages }}"
+    state: present
+
+- name: Configurer le dépôt Kubernetes et Docker
+  ansible.builtin.include_tasks: "tasks/setup_{{ os_family }}_repo.yml"
+
+- name: Installer kubelet, kubeadm et kubectl
+  ansible.builtin.package:
+    name:
+      - "kubelet"
+      - "kubeadm"
+      - "kubectl"
+    state: present
+    update_cache: true
+
+- name: Activer et démarrer kubelet
+  ansible.builtin.service:
+    name: kubelet
+    enabled: true
+    state: started
+
+- name: Installer docker
+  ansible.builtin.apt:
+    name: 
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Télécharger le paquet cri-dockerd (.deb)
+  ansible.builtin.get_url:
+    url: "https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.17/cri-dockerd_0.3.17.3-0.ubuntu-jammy_amd64.deb"
+    dest: /tmp/cri-dockerd_0.3.17.3-0.ubuntu-jammy_amd64.deb
+    mode: '0644'
+
+- name: Installer le paquet cri-dockerd
+  ansible.builtin.apt:
+    deb: /tmp/cri-dockerd_0.3.17.3-0.ubuntu-jammy_amd64.deb
+    state: present
+
+- name: Activer le transfert IP immédiatement
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: true
+  become: true
+
+- name: Configurer la persistance du transfert IP au redémarrage
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/99-kubernetes-cri.conf
+    line: "net.ipv4.ip_forward = 1"
+    create: true
+    mode: '0644'
+  become: true

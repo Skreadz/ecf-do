@@ -1,0 +1,10 @@
+---
+# defaults file for spring_app
+app_name: "spring-app"
+replicas: 1
+image: "skreadz/formation_dortega:latest"
+container_port: 8080
+node_port: 30080
+output_yaml: "/tmp/spring-app.yaml"
+spring_app_namespace: "springboot"
+# Variables pour la configuration de l'application Spring

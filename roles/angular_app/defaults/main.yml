@@ -1,0 +1,10 @@
+---
+# defaults file for angular_app
+app_name: angular-app
+image: skreadz/front-app:latest
+container_port: 80
+node_port: 30081
+replicas: 1
+output_angular_yaml: "/tmp/angular-app.yaml"
+angular_app_namespace: "angular"
+node_ip: 10.237.70.21

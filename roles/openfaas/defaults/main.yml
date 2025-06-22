@@ -1,0 +1,5 @@
+---
+# defaults file for openfaas
+openfaas_user: admin
+openfaas_password: admin
+helm_version: "v3.14.0"
