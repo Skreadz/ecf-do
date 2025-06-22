@@ -29,6 +29,18 @@
 
 |`openfaas`
 |Automatise l’installation d’OpenFaaS sur Kubernetes via Helm, configure les namespaces, secrets d’authentification et déploie la stack serverless.
+
+|`kube_prerequis`
+|Prépare les prérequis système (modules kernel, swap, dépôts, Docker, cri-dockerd) pour l’installation d’un cluster Kubernetes.
+
+|`kube_master`
+|Initialise un nœud maître Kubernetes, configure le réseau, le CNI (Calico), le kubeconfig et prépare la commande d’adhésion des workers.
+
+|`kube_worker`
+|Joint automatiquement un nœud worker à un cluster Kubernetes existant à l’aide de la commande `kubeadm join` et configure les prérequis système.
+
+|`deploy_elk`
+|Déploie la stack ELK (Elasticsearch, Kibana) sur Kubernetes via Helm, crée le namespace, configure les ressources et expose Kibana en NodePort.
 |===
 
 == Introduction
@@ -39,21 +51,6 @@ Ce projet Ansible permet de déployer rapidement un cluster Kubernetes à des fi
 * Machines cibles avec Debian, Ubuntu ou RHEL/CentOS
 * Connexion SSH avec l'utilisateur `dortega` et droits sudo
 
-== Structure du projet
-[source]
-----
-k8s-simple
-├── ansible.cfg
-├── inventory
-│   └── hosts.ini
-├── playbook.yml
-├── group_vars
-│   └── all.yml
-├── vars
-│   ├── debian.yml
-│   └── redhat.yml
-└── README.adoc
-----
 
 == Utilisation
 
