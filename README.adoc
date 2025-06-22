@@ -38,9 +38,6 @@
 
 |`kube_worker`
 |Joint automatiquement un nœud worker à un cluster Kubernetes existant à l’aide de la commande `kubeadm join` et configure les prérequis système.
-
-|`deploy_elk`
-|Déploie la stack ELK (Elasticsearch, Kibana) sur Kubernetes via Helm, crée le namespace, configure les ressources et expose Kibana en NodePort.
 |===
 
 == Introduction
