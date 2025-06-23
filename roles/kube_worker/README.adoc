@@ -31,41 +31,6 @@ Ce rôle Ansible permet de joindre automatiquement un nœud worker à un cluster
 
 [cols="1,1,2",options="header"]
 |===
-|Nom
-|Valeur par défaut
-|Description
-
-|`k8s_version`
-|`1.33`
-|Version de Kubernetes à préparer
-
-|`pod_network_cidr`
-|`192.168.0.0/16`
-|CIDR du réseau de pods
-
-|`os_family`
-|Détecté automatiquement
-|Famille du système d’exploitation (debian, redhat, etc.)
-
-|`kube_config_dir`
-|`/home/dortega/.kube`
-|Répertoire de configuration kubeconfig pour l’utilisateur
-
-|`cni_plugin`
-|`calico`
-|Plugin CNI à préparer (pour compatibilité)
-
-|`cni_version`
-|`3.30.0`
-|Version du plugin CNI
-
-|`disable_swap`
-|`true`
-|Désactive le swap sur le nœud
-
-|`enable_modules`
-|`[br_netfilter, overlay]`
-|Modules kernel à charger pour Kubernetes
 
 |`join_command`
 |*Obligatoire*
@@ -90,18 +55,7 @@ Aucune dépendance externe obligatoire. S’assurer que les collections Ansible 
 
 == Tâches principales
 
-. Chargement et persistance des modules kernel requis
-. Désactivation du swap (immédiat et permanent)
-. Installation des paquets système nécessaires (Docker, Kubernetes, etc.)
-. Configuration des dépôts APT/YUM pour Docker et Kubernetes
-. Installation de Docker, cri-dockerd et dépendances
 . Exécution de la commande `kubeadm join` pour rattacher le worker au cluster
-
-== Bonnes pratiques
-
-* Toujours spécifier une version exacte pour Kubernetes et le CNI
-* Utiliser un utilisateur dédié (`dortega`) pour la gestion du cluster
-* S’assurer que la commande `join_command` est valide et à jour
 
 == Historique des versions
 
